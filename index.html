@@ -13,42 +13,54 @@
         .container { padding: 15px; }
         .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .feature-item { background: white; border-radius: 12px; padding: 25px 10px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-bottom: 4px solid var(--primary); cursor: pointer; font-weight: bold; }
-        #single-view { display: none; background: white; border-radius: 15px; padding: 20px; min-height: 480px; text-align: center; }
+        #single-view { display: none; background: white; border-radius: 15px; padding: 20px; min-height: 500px; text-align: center; position: relative; }
         .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .input-box { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        .ai-msg { background: #e3f2fd; padding: 15px; border-radius: 10px; margin-top: 10px; border-left: 5px solid #2196f3; text-align: left; font-size: 14px; }
+        .ai-msg { background: #e3f2fd; padding: 12px; border-radius: 10px; margin-top: 10px; border-left: 5px solid #2196f3; text-align: left; font-size: 13px; }
         iframe { width: 100%; height: 350px; border-radius: 10px; margin-top: 15px; display: none; border: 2px solid var(--primary); }
+        
+        /* চ্যাট বাবল ডিজাইন */
+        #chat-display { height: 300px; overflow-y: auto; background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 12px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px; }
+        .msg-user { align-self: flex-end; background: #1e3c72; color: white; padding: 8px 12px; border-radius: 15px 15px 0px 15px; max-width: 85%; font-size: 14px; text-align: left; }
+        .msg-ai { align-self: flex-start; background: #f1f1f1; color: #333; padding: 8px 12px; border-radius: 15px 15px 15px 0px; max-width: 85%; font-size: 14px; text-align: left; line-height: 1.5; }
     </style>
 </head>
 <body onload="renderGrid();">
 
-    <div class="top-header">BD-IN SMART APP | STEP BY STEP</div>
+    <div class="top-header">BD-IN SMART APP</div>
 
     <div class="container">
         <div class="feature-grid" id="feature-grid"></div>
-
         <div id="single-view">
             <button onclick="goBack()" style="float:left; padding: 8px 15px; border-radius: 6px; background: #333; color: white; border: none;">← ফিরে যান</button>
-            <div style="clear:both; padding-top:15px;"></div>
-            <h2 id="view-title"></h2>
+            <div style="clear:both; padding-top:10px;"></div>
+            <h2 id="view-title" style="font-size: 18px;"></h2>
             <div id="view-content"></div>
         </div>
     </div>
 
     <script>
-        // আপনার অরিজিনাল কনফিগ
+        // আপনার ৪টি এআই কী এবং ফায়ারবেস কনফিগ
+        const keys = [
+            { type: 'gemini', val: "AIzaSyBSKhDI7bTVOWyiJAJcJESD7B34jZzYwII" },
+            { type: 'gemini', val: "AIzaSyDNYwHjqE01Oxez6PA0OevDlQtdeuIliLk" },
+            { type: 'groq', val: "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" },
+            { type: 'groq', val: "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" }
+        ];
+        let currentKeyIdx = 0;
+
         const firebaseConfig = {
-            apiKey: "AIzaSyBSKhDI7bTVOWyiJAJcJESD7B34jZzYwII",
+            apiKey: keys[0].val,
             databaseURL: "https://bd--in-smart-app-default-rtdb.firebaseio.com/",
             projectId: "bd--in-smart-app"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // মাত্র ২টি বাটন লোড হবে
         const features = [
             { id: 1, name: "ট্রেন লোকেশন", icon: "🚂" },
-            { id: 2, name: "জিপিএস ম্যাপ", icon: "🗺️" }
+            { id: 2, name: "জিপিএস ম্যাপ", icon: "🗺️" },
+            { id: 3, name: "AI অনুবাদক ও চ্যাট", icon: "🤖" }
         ];
 
         function renderGrid() {
@@ -59,56 +71,91 @@
         function openFeature(id) {
             document.getElementById('feature-grid').style.display = 'none';
             document.getElementById('single-view').style.display = 'block';
+            const content = document.getElementById('view-content');
+            const title = document.getElementById('view-title');
             const f = features.find(i => i.id === id);
-            document.getElementById('view-title').innerText = f.icon + " " + f.name;
+            title.innerText = f.icon + " " + f.name;
 
             if(id === 1) {
-                // ১ নম্বর বাটন: ট্রেন লোকেশন (বাংলা/ইংরেজি সার্চ)
-                document.getElementById('view-content').innerHTML = `
-                    <div class="ai-msg">🤖 <b>AI ট্র্যাকার:</b> বাংলাদেশ ও ভারতের সকল ট্রেন। ট্রেনের নাম বা প্রথম কয়েক অক্ষর লিখুন।</div>
-                    <input id="t-input" class="input-box" placeholder="যেমন: সুবর্ণ বা Benapole">
-                    <button class="btn" onclick="searchLogic('train')">লোকেশন দেখুন</button>
-                    <div id="res-msg"></div>
-                    <iframe id="map-frame"></iframe>
-                `;
+                content.innerHTML = `
+                    <input id="t-input" class="input-box" placeholder="ট্রেনের নাম লিখুন...">
+                    <button class="btn" onclick="searchLoc('train')">লোকেশন দেখুন</button>
+                    <div id="res"></div><iframe id="map"></iframe>`;
             } else if(id === 2) {
-                // ২ নম্বর বাটন: জিপিএস ম্যাপ (ইউজার আইডি বা নাম দিয়ে সার্চ)
-                document.getElementById('view-content').innerHTML = `
-                    <div class="ai-msg">🤖 <b>GPS AI:</b> কোনো নির্দিষ্ট ইউজারের লোকেশন দেখতে তার নাম বা আইডি লিখুন।</div>
-                    <input id="u-input" class="input-box" placeholder="ইউজারের নাম বা আইডি লিখুন">
-                    <button class="btn" onclick="searchLogic('user')">জিপিএস ট্র্যাকিং করুন</button>
-                    <div id="res-msg"></div>
-                    <iframe id="map-frame"></iframe>
-                `;
+                content.innerHTML = `
+                    <input id="u-input" class="input-box" placeholder="ইউজার আইডি বা নাম লিখুন...">
+                    <button class="btn" onclick="searchLoc('user')">জিপিএস ট্র্যাকিং</button>
+                    <div id="res"></div><iframe id="map"></iframe>`;
+            } else if(id === 3) {
+                content.innerHTML = `
+                    <div id="chat-display"><div class="msg-ai">আসসালামু আলাইকুম! আমি কীভাবে সাহায্য করতে পারি?</div></div>
+                    <div style="display:flex; gap:5px;">
+                        <textarea id="ai-input" class="input-box" rows="1" style="margin:0; border-radius:20px;" placeholder="মেসেজ লিখুন..."></textarea>
+                        <button onclick="askAI('chat')" style="background:#1e3c72; color:white; border:none; width:45px; border-radius:50%; font-size:20px;">➔</button>
+                    </div>
+                    <button onclick="askAI('translate')" style="background:none; border:1px solid green; color:green; margin-top:8px; border-radius:10px; padding:5px; font-size:12px;">🌐 দ্রুত অনুবাদ</button>
+                    <div style="height:50px; margin-top:10px; background:#eee; display:flex; align-items:center; justify-content:center; font-size:10px;">বিজ্ঞাপন (Banner Ad)</div>`;
             }
         }
 
-        function searchLogic(type) {
-            const val = (type === 'train' ? document.getElementById('t-input').value : document.getElementById('u-input').value).trim().toLowerCase();
-            const res = document.getElementById('res-msg');
-            const map = document.getElementById('map-frame');
-            if(!val) return alert("কিছু লিখুন");
-
-            res.innerHTML = `<div class="ai-msg">🤖 AI ডাটাবেস চেক করছে...</div>`;
-            map.style.display = "none";
-
-            db.ref('live_gps').once('value', snapshot => {
-                let found = null;
-                snapshot.forEach(child => {
-                    let d = child.val();
-                    let target = type === 'train' ? (d.train || "") : (d.name || child.key);
-                    if (target.toLowerCase().includes(val)) found = d;
+        async function searchLoc(type) {
+            const val = document.getElementById(type === 'train' ? 't-input' : 'u-input').value.trim().toLowerCase();
+            const res = document.getElementById('res');
+            const map = document.getElementById('map');
+            if(!val) return;
+            res.innerHTML = "🤖 AI খুঁজছে...";
+            db.ref('live_gps').once('value', s => {
+                let f = null;
+                s.forEach(c => {
+                    let d = c.val();
+                    let t = type === 'train' ? (d.train || "") : (d.name || c.key);
+                    if(t.toLowerCase().includes(val)) f = d;
                 });
-
-                if (found) {
-                    res.innerHTML = `<div class="ai-msg" style="border-left-color:green">✅ AI উত্তর: সফলভাবে পাওয়া গেছে! নিচে ম্যাপ দেখুন।</div>`;
+                if(f) {
+                    res.innerHTML = "✅ লোকেশন পাওয়া গেছে!";
                     map.style.display = "block";
-                    // OpenStreetMap ব্যবহার করা হয়েছে
-                    map.src = `https://www.openstreetmap.org/export/embed.html?bbox=${found.lng-0.005},${found.lat-0.005},${found.lng+0.005},${found.lat+0.005}&layer=mapnik&marker=${found.lat},${found.lng}`;
-                } else {
-                    res.innerHTML = `<div class="ai-msg" style="border-left-color:red">❌ দুঃখিত, ডাটাবেসে এই নামে কাউকে পাওয়া যায়নি।</div>`;
-                }
+                    map.src = `https://www.openstreetmap.org/export/embed.html?bbox=${f.lng-0.005},${f.lat-0.005},${f.lng+0.005},${f.lat+0.005}&layer=mapnik&marker=${f.lat},${f.lng}`;
+                } else { res.innerHTML = "❌ পাওয়া যায়নি!"; }
             });
+        }
+
+        async function askAI(mode) {
+            const input = document.getElementById('ai-input');
+            const display = document.getElementById('chat-display');
+            const text = input.value.trim();
+            if(!text) return;
+            display.innerHTML += `<div class="msg-user">${text}</div>`;
+            input.value = "";
+            display.scrollTop = display.scrollHeight;
+            let prompt = mode === 'translate' ? `Translate to Bengali and English: "${text}"` : text;
+            const loading = document.createElement("div");
+            loading.className = "msg-ai"; loading.innerText = "টাইপ করছি...";
+            display.appendChild(loading);
+            try {
+                const response = await callAI(prompt);
+                loading.innerText = response;
+                display.scrollTop = display.scrollHeight;
+            } catch (e) {
+                currentKeyIdx = (currentKeyIdx + 1) % keys.length;
+                askAI(mode);
+            }
+        }
+
+        async function callAI(p) {
+            const k = keys[currentKeyIdx];
+            if(k.type === 'gemini') {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${k.val}`, {
+                    method: "POST", headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({contents: [{parts: [{text: p}]}]})
+                });
+                const d = await r.json(); return d.candidates[0].content.parts[0].text;
+            } else {
+                const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST", headers: {"Authorization": `Bearer ${k.val}`, "Content-Type": "application/json"},
+                    body: JSON.stringify({model: "llama3-8b-8192", messages: [{role: "user", content: p}]})
+                });
+                const d = await r.json(); return d.choices[0].message.content;
+            }
         }
 
         function goBack() {
@@ -117,4 +164,4 @@
         }
     </script>
 </body>
-</html>
+    </html>
