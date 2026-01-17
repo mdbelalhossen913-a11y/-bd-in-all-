@@ -1,57 +1,126 @@
-// ১ নম্বর বাটনের কাজ (ট্রেন লোকেশন)
-if(id === 1) {
-    document.getElementById('view-content').innerHTML = `
-        <div class="ai-msg">
-            🤖 <b>AI Network:</b> বাংলাদেশ ও ভারতের সকল ট্রেনের লাইভ তথ্য। 
-            যদি ট্রেনের ভেতর ২-৩ জন থাকে, AI তাদের থেকে সঠিক লোকেশন বেছে নেবে।
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BD-IN SMART APP</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    <style>
+        :root { --primary: #1e3c72; --bg: #f0f3f7; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding-bottom: 70px; }
+        .top-header { background: var(--primary); color: white; padding: 15px; text-align: center; font-weight: bold; }
+        .container { padding: 15px; }
+        .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .feature-item { background: white; border-radius: 12px; padding: 20px 10px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-bottom: 4px solid var(--primary); cursor: pointer; }
+        .feature-item span { font-size: 35px; display: block; margin-bottom: 8px; }
+        #single-view { display: none; background: white; border-radius: 15px; padding: 20px; min-height: 450px; text-align: center; }
+        .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .input-box { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        .ai-msg { background: #e3f2fd; padding: 15px; border-radius: 10px; margin-top: 10px; border-left: 5px solid #2196f3; text-align: left; font-size: 14px; }
+        #banner-ad { position: fixed; bottom: 0; left: 0; width: 100%; height: 50px; background: #fff; border-top: 1px solid #ddd; display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    </style>
+</head>
+<body onload="renderGrid();">
+
+    <div class="top-header">BD-IN SMART APP | AI CONTROL</div>
+
+    <div class="container">
+        <div class="feature-grid" id="feature-grid"></div>
+
+        <div id="single-view">
+            <button onclick="goBack()" style="float:left; padding: 5px 12px; border-radius: 5px; background: #444; color: white; border: none;">← ব্যাক</button>
+            <div style="clear:both; padding-top:15px;"></div>
+            <h2 id="view-title"></h2>
+            <div id="view-content"></div>
         </div>
-        
-        <input id="t-input" class="input-box" placeholder="ট্রেনের নাম লিখুন (উদা: পারাবত)">
-        <button class="btn" onclick="aiSearchTrain()">লাইভ লোকেশন দেখুন</button>
-        
-        <div id="ai-status"></div>
-        <iframe id="map-container" style="width:100%; height:320px; display:none; border-radius:10px; margin-top:10px;" frameborder="0"></iframe>
-    `;
-}
+    </div>
 
-// ১ নম্বর বাটনের AI লজিক (অরিজিনাল চাবি ও কমান্ড সহ)
-function aiSearchTrain() {
-    let train = document.getElementById('t-input').value.trim().toLowerCase();
-    let status = document.getElementById('ai-status');
-    let map = document.getElementById('map-container');
-    
-    if(!train) return alert("ট্রেনের নাম লিখুন");
-    status.innerHTML = `<div class="ai-msg">🤖 AI আপনার দেওয়া নামে ডাটাবেস চেক করছে...</div>`;
-    map.style.display = "none";
+    <div id="banner-ad"><small>বিজ্ঞাপন লোড হচ্ছে...</small></div>
 
-    // Firebase থেকে লাইভ ইউজার চেক
-    db.ref('live_gps').once('value', snapshot => {
-        let matched = [];
-        snapshot.forEach(child => {
-            let data = child.val();
-            // নাম মিললে ইউজারকে লিস্টে নেবে
-            if(data.train && data.train.toLowerCase().includes(train)) matched.push(data);
-        });
+    <script>
+        // AI চাবিগুলো (একটি শেষ হলে অটো অন্যটি)
+        const aiKeys = ["AIzaSyBSKhDI7bTVOWyiJAJcJESD7B34jZzYwII", "AIzaSyDNYwHjqE01Oxez6PA0OevDlQtdeuIliLk"];
+        let activeKey = aiKeys[0];
 
-        if(matched.length > 0) {
-            // ২-৩ জন থাকলে প্রথম জনের লোকেশন AI ম্যাপে দেখাবে
-            let u = matched[0];
-            status.innerHTML = `<div class="ai-msg" style="border-left-color:green">
-                ✅ <b>AI উত্তর:</b> এই ট্রেনের ভেতর বর্তমানে ${matched.length} জন ইউজার আছেন। 
-                লাইভ লোকেশন নিচে দেওয়া হলো।
-            </div>`;
-            map.style.display = "block";
-            map.src = `https://maps.google.com/maps?q=${u.lat},${u.lng}&t=k&z=15&output=embed`;
-        } else {
-            // ট্রেনের ভেতর কেউ না থাকলে AI সরাসরি উত্তর দেবে
-            status.innerHTML = `<div class="ai-msg" style="border-left-color:red">
-                ❌ <b>AI উত্তর:</b> দুঃখিত, এই ট্রেনের ভেতরে বর্তমানে আমাদের কোনো ইউজার নেই। 
-                তাই লাইভ লোকেশন পাওয়া যাচ্ছে না।
-            </div>`;
+        const firebaseConfig = {
+            apiKey: activeKey,
+            databaseURL: "https://bd--in-smart-app-default-rtdb.firebaseio.com/",
+            projectId: "bd--in-smart-app"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const features = [
+            { id: 1, name: "ট্রেন লোকেশন", icon: "🚂" }, { id: 2, name: "জিপিএস ম্যাপ", icon: "🗺️" },
+            { id: 3, name: "ডিজিটাল সেল", icon: "📈" }, { id: 4, name: "AI অনুবাদক", icon: "🌐" },
+            { id: 5, name: "নিউজ পোর্টাল", icon: "📰" }, { id: 6, name: "সেটিংস", icon: "⚙️" },
+            { id: 7, name: "ইসলামিক", icon: "🕌" }, { id: 8, name: "মেসেঞ্জার AI", icon: "💬" },
+            { id: 9, name: "ঘোষণা", icon: "📢" }, { id: 10, name: "ভেরিফাই", icon: "✅" },
+            { id: 11, name: "জরুরি সেবা", icon: "🚨" }, { id: 12, name: "সাপোর্ট", icon: "📱" },
+            { id: 13, name: "টিকেট বুকিং", icon: "🎟️" }
+        ];
+
+        function renderGrid() {
+            const grid = document.getElementById('feature-grid');
+            grid.innerHTML = features.map(f => `<div class="feature-item" onclick="openFeature(${f.id})"><span>${f.icon}</span><b>${f.name}</b></div>`).join('');
         }
-    }).catch(err => {
-        // যদি প্রথম AI চাবি (Gemini Key 1) শেষ হয়ে যায়, অটোমেটিক ২য়টি কাজ করবে
-        console.log("Switching to Backup AI Key...");
-        // আপনার চাবি পরিবর্তনের লজিক এখানে কাজ করবে
-    });
-}
+
+        function openFeature(id) {
+            // বাটন খুললে অ্যাড লোড হবে (Reward ID: ca-app-pub-6144850890538766/3544142618)
+            document.getElementById('feature-grid').style.display = 'none';
+            document.getElementById('single-view').style.display = 'block';
+            const f = features.find(i => i.id === id);
+            document.getElementById('view-title').innerText = f.icon + " " + f.name;
+
+            if(id === 1) {
+                document.getElementById('view-content').innerHTML = `
+                    <div class="ai-msg">🤖 <b>AI Network:</b> ট্রেনের নাম লিখুন। AI অটোমেটিক ২-৩ জন ইউজারের লোকেশন চেক করে আপনাকে ম্যাপ দেখাবে।</div>
+                    <input id="t-input" class="input-box" placeholder="ট্রেনের নাম (যেমন: সীমান্ত এক্সপ্রেস)">
+                    <button class="btn" onclick="aiSearch()">লাইভ লোকেশন দেখুন</button>
+                    <div id="ai-res"></div>
+                    <iframe id="map-f" style="width:100%; height:320px; border-radius:10px; margin-top:10px; display:none;" frameborder="0"></iframe>
+                `;
+            } else {
+                document.getElementById('view-content').innerHTML = `<div class="ai-msg">এই বাটনটি (${f.name}) একটু পর সাজানো হবে।</div>`;
+            }
+        }
+
+        function aiSearch() {
+            const train = document.getElementById('t-input').value.trim().toLowerCase();
+            const res = document.getElementById('ai-res');
+            const map = document.getElementById('map-f');
+            if(!train) return;
+
+            res.innerHTML = `<div class="ai-msg">🤖 AI ডাটাবেস চেক করছে...</div>`;
+            map.style.display = "none";
+
+            db.ref('live_gps').once('value', snapshot => {
+                let found = [];
+                snapshot.forEach(c => {
+                    let d = c.val();
+                    if(d.train && d.train.toLowerCase().includes(train)) found.push(d);
+                });
+
+                if(found.length > 0) {
+                    let u = found[0];
+                    res.innerHTML = `<div class="ai-msg" style="border-left-color:green">✅ <b>AI উত্তর:</b> বর্তমানে এই ট্রেনে ${found.length} জন আছেন। ২ জনের লোকেশন নেওয়া হয়েছে।</div>`;
+                    map.style.display = "block";
+                    map.src = `https://maps.google.com/maps?q=${u.lat},${u.lng}&t=k&z=15&output=embed`;
+                } else {
+                    res.innerHTML = `<div class="ai-msg" style="border-left-color:red">❌ <b>AI উত্তর:</b> এই ট্রেনের ভেতরে বর্তমানে কেউ নেই।</div>`;
+                }
+            }).catch(() => {
+                // চাবি শেষ হলে অটোমেটিক অন্যটি চালু হবে
+                activeKey = aiKeys[1];
+                aiSearch();
+            });
+        }
+
+        function goBack() {
+            document.getElementById('feature-grid').style.display = 'grid';
+            document.getElementById('single-view').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
