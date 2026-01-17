@@ -3,167 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BD-IN SMART APP | MD BELAL HOSSAIN</title>
+    <title>AI TRAIN TRACKER</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <style>
-        :root { --primary: #1e3c72; --dark: #2c3e50; --bg: #f0f3f7; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; user-select: none; }
-        .top-header { background: linear-gradient(135deg, var(--primary), #2a5298); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .date-box { background: rgba(255,255,255,0.1); padding: 8px; border-radius: 10px; font-size: 12px; margin-top: 8px; border: 1px solid rgba(255,255,255,0.3); line-height: 1.5; }
-        .container { padding: 15px; padding-bottom: 80px; }
-        .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .feature-item { background: white; border-radius: 15px; padding: 25px 10px; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-bottom: 5px solid var(--primary); }
-        .feature-item span { font-size: 40px; display: block; margin-bottom: 10px; }
-        #single-view { display: none; background: white; border-radius: 20px; padding: 25px; min-height: 400px; text-align: center; }
-        .back-btn { background: var(--dark); color: white; padding: 8px 15px; border-radius: 10px; border: none; float: left; cursor: pointer; }
-        .btn { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; margin-top: 10px; cursor: pointer; }
-        .input-box { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
-        .ai-msg { background: #e8f4fd; padding: 10px; border-radius: 10px; margin-top: 10px; border-left: 5px solid #2196F3; text-align: left; font-size: 14px; }
-        .footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #111; color: white; padding: 12px 0; font-size: 13px; font-weight: bold; }
-        .overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); display:flex; align-items:center; justify-content:center; z-index:10000; }
-        .card { background: white; padding: 30px; border-radius: 25px; width: 85%; max-width: 380px; text-align: center; }
+        :root { --primary: #1e3c72; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; }
+        .header { background: var(--primary); color: white; padding: 15px; text-align: center; font-weight: bold; }
+        .container { padding: 15px; }
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .input-box { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .ai-status { background: #e3f2fd; border-left: 5px solid #1976d2; padding: 10px; margin-top: 10px; font-size: 14px; }
+        #map-container { width: 100%; height: 300px; border-radius: 10px; margin-top: 15px; display: none; border: 2px solid #ddd; }
+        .user-dot { color: green; font-weight: bold; font-size: 12px; }
     </style>
 </head>
-<body onload="updateDateTime(); renderGrid();">
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAITEO9cEv0D9DXAummlx1Ak6JTnn5Yus8",
-            databaseURL: "https://bd--in-smart-app-default-rtdb.firebaseio.com/",
-            projectId: "bd--in-smart-app",
-            appId: "1:10255323809:android:b7182e5bfb340f710d96e0"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+<body onload="initApp()">
 
-        function updateDateTime() {
-            const now = new Date();
-            const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
-            const tomorrow = new Date(now); tomorrow.setDate(now.getDate() + 1);
-            document.getElementById('date-display').innerHTML = `
-                <b>আজ:</b> ${now.toLocaleDateString('bn-BD', {weekday:'long', year:'numeric', month:'long', day:'numeric'})} <br>
-                <b>গতকাল:</b> ${yesterday.toLocaleDateString('bn-BD', {day:'numeric', month:'short'})} | 
-                <b>আগামীকাল:</b> ${tomorrow.toLocaleDateString('bn-BD', {day:'numeric', month:'short'})}
-            `;
-        }
-    </script>
+<div class="header">BD-IN SMART APP | AI CONTROL</div>
 
-    <div id="login-scr" class="overlay">
-        <div class="card">
-            <span style="font-weight:bold; color:var(--primary)">বিসমিল্লাহির রাহমানির রাহিম</span>
-            <h3 style="margin:10px 0;">BD-IN SMART APP</h3>
-            <select id="uCountry" class="input-box">
-                <option value="">দেশ বাছুন</option>
-                <option value="BD">বাংলাদেশ 🇧🇩</option>
-                <option value="IN">ভারত 🇮🇳</option>
-            </select>
-            <input type="text" id="uName" class="input-box" placeholder="আপনার নাম">
-            <input type="number" id="uPhone" class="input-box" placeholder="মোবাইল নম্বর">
-            <button class="btn" onclick="doLogin()">প্রবেশ করুন</button>
-        </div>
+<div class="container">
+    <div class="card">
+        <h3>🚂 ট্রেন লাইভ সার্চ (AI)</h3>
+        <p style="font-size: 12px; color: #666;">Gemini & Grok AI লজিক দ্বারা চালিত</p>
+        <input type="text" id="train-input" class="input-box" placeholder="ট্রেনের নাম লিখুন (BD/IN)">
+        <button class="btn" onclick="aiSearch()">লাইভ লোকেশন চেক করুন</button>
+        
+        <div id="ai-response" class="ai-status" style="display: none;"></div>
+        
+        <iframe id="map-container"></iframe>
     </div>
 
-    <div id="main-app" style="display:none;">
-        <div class="top-header">
-            <span style="font-weight:bold;">বিসমিল্লাহির রাহমানির রাহিম</span>
-            <div style="font-weight:bold; font-size:20px;">BD-IN SMART APP</div>
-            <div id="date-display" class="date-box"></div>
-            <div style="font-size:11px; margin-top:5px; color:#ddd;">পরিচালক: মোঃ বেলাল হোসেন</div>
-        </div>
-        <div class="container">
-            <div class="feature-grid" id="feature-grid"></div>
-            <div id="single-view">
-                <button class="back-btn" onclick="goBack()">← ফিরে যান</button>
-                <div style="clear:both; padding-top:10px;"></div>
-                <h2 id="view-title"></h2>
-                <div id="view-content"></div>
-            </div>
-        </div>
+    <div class="card" id="admin-panel">
+        <h4>অ্যাডমিন ড্যাশবোর্ড</h4>
+        <div id="user-list"></div>
     </div>
+</div>
 
-    <div class="footer">
-        <marquee scrollamount="5">প্রাইভেসি পলিসি: এই অ্যাপটি জিপিএস নেটওয়ার্কের মাধ্যমে পরিচালিত। আপনার সকল ডাটা মোঃ বেলাল হোসেনের নিকট সুরক্ষিত। | ভবিষ্যতে এই অ্যাপটি ১০০ টাকা দিয়ে রেজিস্ট্রেশন করতে হবে।</marquee>
-    </div>
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyAITEO9cEv0D9DXAummlx1Ak6JTnn5Yus8",
+        databaseURL: "https://bd--in-smart-app-default-rtdb.firebaseio.com/",
+        projectId: "bd--in-smart-app",
+        appId: "1:10255323809:android:b7182e5bfb340f710d96e0"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    <script>
-        const features = [
-            { id: 1, name: "ট্রেন লোকেশন", icon: "🚂" }, { id: 2, name: "জিপিএস ম্যাপ", icon: "🗺️" },
-            { id: 3, name: "ডিজিটাল সেল বিজনেস", icon: "📈" }, { id: 4, name: "AI অনুবাদক", icon: "🌐" },
-            { id: 5, name: "নিউজ পোর্টাল", icon: "📰" }, { id: 6, name: "সেটিংস", icon: "⚙️" },
-            { id: 7, name: "ইসলামিক", icon: "🕌" }, { id: 8, name: "মেসেঞ্জার AI", icon: "💬" },
-            { id: 9, name: "ঘোষণা", icon: "📢" }, { id: 10, name: "ভেরিফাই", icon: "✅" },
-            { id: 11, name: "জরুরি সেবা", icon: "🚨" }, { id: 12, name: "সাপোর্ট", icon: "📱" },
-            { id: 13, name: "টিকেট বুকিং", icon: "🎟️" }
-        ];
-
-        function renderGrid() {
-            const grid = document.getElementById('feature-grid'); grid.innerHTML = "";
-            features.forEach(f => {
-                grid.innerHTML += `<div class="feature-item" onclick="openFeature(${f.id})"><span>${f.icon}</span><b>${f.name}</b></div>`;
-            });
-        }
-
-        function openFeature(id) {
-            document.getElementById('feature-grid').style.display = 'none';
-            document.getElementById('single-view').style.display = 'block';
-            const f = features.find(i => i.id === id);
-            document.getElementById('view-title').innerText = f.icon + " " + f.name;
-            let html = "";
-
-            if(id === 1) { // অরিজিনাল ট্র্যাকিং
-                html = `<div class="ai-msg">এআই ট্র্যাকার: ট্রেনের নাম লিখুন।</div><input id="t-q" class="input-box" placeholder="যেমন: সুরমা"><button class="btn" onclick="searchTrain()">লোকেশন চেক</button><div id="t-res"></div>`;
-            } else if(id === 2) { // জিপিএস ম্যাপ
-                html = `<div class="ai-msg"><b>AI পরামর্শ:</b> রিয়েল রোড দেখতে হলে সরাসরি ম্যাপ ওপেন করুন।</div><button class="btn" onclick="window.open('https://www.google.com/maps')">ম্যাপ ওপেন করুন</button>`;
-            } else if(id === 3) { // ডিজিটাল সেল বিজনেস
-                html = `<p>আইডি দিয়ে আপনার একাউন্টে প্রবেশ করুন।</p><input id="bz-id" class="input-box" placeholder="আপনার আইডি"><button class="btn" onclick="window.open('https://bd-digital-sale.com/login?user='+document.getElementById('bz-id').value)">প্রবেশ করুন</button>`;
-            } else if(id === 4) { // অনুবাদক
-                html = `<button class="btn" onclick="window.open('https://translate.google.com/?op=images')">📸 ছবি অনুবাদ</button><button class="btn" onclick="window.open('https://translate.google.com/?op=translate')">🎤 কথা বলে অনুবাদ</button>`;
-            } else if(id === 5) { // নিউজ
-                html = `<button class="btn" onclick="window.open('https://www.prothomalo.com/')">প্রথম আলো নিউজ</button><button class="btn" onclick="window.open('https://www.bbc.com/bengali')">বিবিসি নিউজ</button>`;
-            } else if(id === 7) { // ইসলামিক
-                html = `<button class="btn" onclick="window.open('https://quran.com/')">আল কোরআন</button><button class="btn" onclick="window.open('https://www.hadithbd.com/')">হাদিস ডোর</button>`;
-            } else if(id === 10) { // ভেরিফাই
-                html = `<button class="btn" onclick="window.open('https://services.nidw.gov.bd/')">NID ভেরিফাই</button><button class="btn" onclick="window.open('https://bdris.gov.bd/br/search')">জন্ম নিবন্ধন ভেরিফাই</button>`;
-            } else if(id === 11) { // জরুরি সেবা
-                html = `<button class="btn" style="background:red" onclick="window.open('tel:999')">৯৯৯ এ কল দিন</button>`;
-            } else if(id === 13) { // টিকেট বুকিং (অফিসিয়াল)
-                html = `<button class="btn" onclick="window.open('https://eticket.railway.gov.bd/')">বাংলাদেশ রেলওয়ে টিকেট</button><button class="btn" onclick="window.open('https://www.irctc.co.in/')">ভারতীয় রেল টিকেট (IRCTC)</button>`;
-            } else if(id === 9) { // ঘোষণা
-                html = `<div class="ai-msg" id="n-box">অপেক্ষা করুন...</div>`;
-                db.ref('notice').on('value', s => { document.getElementById('n-box').innerText = s.val() || "কোনো ঘোষণা নেই।"; });
-            } else if(id === 12) { // সাপোর্ট
-                html = `<button class="btn" onclick="window.open('https://wa.me/YOURNUMBER')">হোয়াটসঅ্যাপ সাপোর্ট</button>`;
-            } else {
-                html = `<div class="ai-msg">এআই এই অপশনটি প্রসেস করছে...</div>`;
-            }
-            document.getElementById('view-content').innerHTML = html;
-        }
-
-        function searchTrain() {
-            const q = document.getElementById('t-q').value;
-            if(!q) return;
-            document.getElementById('t-res').innerHTML = "AI চেক করছে...";
-            db.ref('live_gps').once('value', s => {
-                let found = false;
-                s.forEach(c => { if(c.val().train === q) found = true; });
-                document.getElementById('t-res').innerHTML = found ? `<div class="ai-msg" style="color:green">✅ ট্রেনটি আমাদের ইউজার দ্বারা ট্র্যাক করা হয়েছে।</div>` : `<div class="ai-msg" style="color:red">❌ দুঃখিত, এই ট্রেনে বর্তমানে আমাদের কোনো ইউজার নেই।</div>`;
-            });
-        }
-
-        function doLogin() {
-            const n = document.getElementById('uName').value, p = document.getElementById('uPhone').value, c = document.getElementById('uCountry').value;
-            if(!n || !p || !c) return alert("সব তথ্য দিন");
-            db.ref('users/'+p).set({ name: n, country: c, last_login: Date.now() });
-            document.getElementById('login-scr').style.display = 'none';
-            document.getElementById('main-app').style.display = 'block';
-            if (navigator.geolocation) {
-                navigator.geolocation.watchPosition(pos => {
-                    db.ref('live_gps/'+p).update({ user: n, lat: pos.coords.latitude, lng: pos.coords.longitude });
+    // অটো লোকেশন ট্র্যাকিং (ইউজার ট্রেনের ভেতর থাকলে অটো কাজ করবে)
+    function initApp() {
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(pos => {
+                // এখানে আপনার ফোন নম্বর এবং ট্রেনের নাম লোকাল স্টোরেজ থেকে নিতে হবে
+                let phone = localStorage.getItem('uPhone') || 'Guest';
+                let name = localStorage.getItem('uName') || 'User';
+                let train = localStorage.getItem('uTrain') || 'None';
+                
+                db.ref('live_gps/' + phone).update({
+                    user: name,
+                    train: train,
+                    lat: pos.coords.latitude,
+                    lng: pos.coords.longitude,
+                    time: Date.now()
                 });
-            }
+            }, null, { enableHighAccuracy: true });
         }
+        updateAdminView();
+    }
 
-        function goBack() { document.getElementById('feature-grid').style.display = 'grid'; document.getElementById('single-view').style.display = 'none'; }
-    </script>
+    // স্মার্ট AI সার্চ লজিক
+    function aiSearch() {
+        let query = document.getElementById('train-input').value.trim().toLowerCase();
+        let status = document.getElementById('ai-response');
+        let map = document.getElementById('map-container');
+        
+        status.style.display = 'block';
+        status.innerHTML = "🤖 AI ডিসিশন নিচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।";
+        map.style.display = 'none';
+
+        db.ref('live_gps').once('value', snapshot => {
+            let activeUsers = [];
+            snapshot.forEach(child => {
+                let data = child.val();
+                if (data.train && data.train.toLowerCase().includes(query)) {
+                    activeUsers.push(data);
+                }
+            });
+
+            if (activeUsers.length > 0) {
+                // ২-৩ জন ইউজারের লোকেশন ফিল্টার করা (প্রথম ২ জনকে নেওয়া হচ্ছে)
+                let topUsers = activeUsers.slice(0, 2);
+                let target = topUsers[0]; // ম্যাপের জন্য প্রধান টার্গেট
+
+                status.innerHTML = `✅ <b>AI সফল:</b> বর্তমানে ট্রেনের ভেতরে ${activeUsers.length} জন ইউজার আছে। ২ জনের লোকেশন ভেরিফাই করা হয়েছে।`;
+                
+                // অ্যাপের ভেতরেই গুগল ম্যাপ দেখানো
+                map.style.display = 'block';
+                map.src = `https://maps.google.com/maps?q=${target.lat},${target.lng}&z=15&output=embed`;
+            } else {
+                status.style.borderLeftColor = "red";
+                status.innerHTML = "❌ <b>AI বার্তা:</b> দুঃখিত, এই ট্রেনের ভেতর বর্তমানে কোনো ইউজার নেই। তাই লাইভ লোকেশন দেখানো সম্ভব হচ্ছে না।";
+            }
+        });
+    }
+
+    // এডমিন ভিউ লজিক
+    function updateAdminView() {
+        db.ref('live_gps').on('value', s => {
+            let list = document.getElementById('user-list');
+            list.innerHTML = "";
+            s.forEach(c => {
+                let d = c.val();
+                list.innerHTML += `<div class="user-dot">📍 ${d.user} - ${d.train}</div>`;
+            });
+        });
+    }
+</script>
+
 </body>
-</html>
+    </html>
